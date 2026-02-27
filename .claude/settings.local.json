@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --screenshot=\"c:/Users/USER/Desktop/chaeyun_drive/WinaryXR/screenshot_ui.png\" --window-size=1200,900 \"file:///c:/Users/USER/Desktop/chaeyun_drive/WinaryXR/templates/index.html\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --screenshot=\"c:/Users/USER/Desktop/chaeyun_drive/WinaryXR/screenshot_ui_full.png\" --window-size=1300,2200 \"file:///c:/Users/USER/Desktop/chaeyun_drive/WinaryXR/templates/index.html\")",
+      "Bash(curl -s -X POST http://localhost:5000/predict -H \"Content-Type: application/json\" -d '{\"\"is_red\"\":1,\"\"color_depth\"\":0.8,\"\"color_ruby\"\":1,\"\"color_garnet\"\":1,\"\"nose_intensity\"\":0.75,\"\"fruit_red\"\":1,\"\"fruit_black\"\":1,\"\"secondary_oak\"\":1,\"\"tertiary_present\"\":1,\"\"development\"\":0.6,\"\"acidity\"\":0.5,\"\"body\"\":0.85,\"\"finish\"\":0.75,\"\"tannin\"\":0.8,\"\"score_complexity\"\":0.8,\"\"score_intensity\"\":0.8,\"\"color_straw\"\":0,\"\"color_lemon\"\":0,\"\"color_gold\"\":0,\"\"color_amber\"\":0,\"\"color_brown\"\":0,\"\"color_purple\"\":0,\"\"fruit_green\"\":0,\"\"fruit_citrus\"\":0,\"\"fruit_stone\"\":0,\"\"fruit_tropical\"\":0,\"\"secondary_creamy\"\":0}')",
+      "Bash(python -c \":*)",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --screenshot=\"c:/Users/USER/Desktop/chaeyun_drive/WinaryXR/screenshot_result.png\" --window-size=1300,900 --virtual-time-budget=2000 \"file:///c:/Users/USER/Desktop/chaeyun_drive/WinaryXR/_result_preview.html\")",
+      "Bash(python -c \"from PIL import Image; print\\(''PIL ok''\\)\")"
+    ]
+  }
+}
