@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WinaryXR — Wine Tasting Sheet</title>
+<style>
+  :root {
+    --bg:        #0e0a0f;
+    --surface:   #1a1320;
+    --card:      #211829;
+    --border:    #3a2d45;
+    --accent:    #c9a84c;
+    --accent2:   #8b1a2e;
+    --text:      #e8dff0;
+    --muted:     #8a7a9a;
+    --green:     #4ade80;
+    --radius:    12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, var(--accent), #e8c87a, var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--muted); margin-top: 6px; font-size: 0.9rem; }
+
+  /* ── 레이아웃 ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── 와인 타입 토글 ── */
+  .wine-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .wine-toggle label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+  }
+  .wine-toggle input[type=radio] { display: none; }
+  .wine-toggle input[type=radio]:checked + span { color: var(--accent); }
+  .wine-toggle label:has(input:checked) {
+    border-color: var(--accent);
+    background: rgba(201,168,76,0.1);
+  }
+
+  /* ── 색상 체크박스 그리드 ── */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .color-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .color-chip:hover { border-color: var(--accent); background: rgba(201,168,76,0.06); }
+  .color-chip input { display: none; }
+  .color-chip .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+  .color-chip input:checked ~ .check { opacity: 1; }
+  .check {
+    margin-left: auto;
+    opacity: 0;
+    color: var(--green);
+    font-size: 0.75rem;
+    transition: opacity 0.15s;
+  }
+  .color-chip:has(input:checked) {
+    border-color: var(--green);
+    background: rgba(74,222,128,0.06);
+  }
+
+  /* ── 슬라이더 ── */
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .slider-row:last-child { margin-bottom: 0; }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .slider-label span:last-child { color: var(--accent); font-weight: 600; }
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 6px rgba(201,168,76,0.5);
+  }
+  .range-ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: var(--border);
+    margin-top: 1px;
+  }
+
+  /* ── 과일/향 체크박스 ── */
+  .chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 8px;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip input { display: none; }
+  .chip:has(input:checked) {
+    border-color: var(--accent);
+    background: rgba(201,168,76,0.12);
+    color: var(--accent);
+  }
+
+  /* ── 제출 버튼 ── */
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent2), #c0253f);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .submit-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── 결과 패널 ── */
+  .result-panel {
+    position: sticky;
+    top: 24px;
+  }
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .result-card h2 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* 파티클 미리보기 캔버스 */
+  #particleCanvas {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  /* 파티클 타입 배지 */
+  .ptype-badge {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .ptype-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+  }
+  .ptype-desc {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* 색상 스와치 */
+  .color-swatch {
+    width: 100%;
+    height: 36px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    transition: background 0.4s;
+  }
+
+  /* 파라미터 그리드 */
+  .param-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .param-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .param-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .param-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* JSON 출력 */
+  .json-output {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.72rem;
+    color: #9de3c8;
+    white-space: pre;
+    overflow-x: auto;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  /* 플레이스홀더 */
+  .placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    gap: 8px;
+  }
+  .placeholder .icon { font-size: 2.5rem; }
+
+  /* 로딩 스피너 */
+  .spinner {
+    display: none;
+    width: 24px; height: 24px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍷 WinaryXR — Tasting Sheet</h1>
+  <p>테이스팅 특성을 선택하면 AI가 파티클 이펙트 파라미터를 추론합니다</p>
+</header>
+
+<div class="layout">
+
+  <!-- ── 왼쪽: 입력 폼 ── -->
+  <div class="form-col">
+
+    <!-- 1. 와인 타입 -->
+    <div class="card">
+      <h2>① 와인 타입</h2>
+      <div class="wine-toggle">
+        <label>
+          <input type="radio" name="wine_type" value="red" checked>
+          <span>🍷 레드</span>
+        </label>
+        <label>
+          <input type="radio" name="wine_type" value="white">
+          <span>🥂 화이트</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 2. 외관 -->
+    <div class="card">
+      <h2>② 외관 (Appearance)</h2>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <span>색상 깊이 (Color Depth)</span>
+          <span id="val-color_depth">0.5</span>
+        </div>
+        <input type="range" id="color_depth" min="0" max="1" step="0.01" value="0.5"
+               oninput="updateVal('color_depth',this.value)">
+        <div class="range-ends"><span>연함</span><span>진함</span></div>
+      </div>
+
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:8px;">색조 선택 (복수 가능)</div>
+      <div class="color-grid">
+        <label class="color-chip">
+          <input type="checkbox" name="color_straw" value="1">
+          <span class="dot" style="background:#f5e6a3"></span> Straw
+          <span class="check">✓</span>
+        </label>
+        <label class="color-chip">
+          <input type="checkbox" name="color_lemon" value="1">
+          <span class="dot" style="background:#f5d04a"></span> Lemon
+          <span class="check">✓</span>
+        </label>
+        <label class="color-chip">
+          <input type="checkbox" name="color_gold" value="1">
+          <span class="dot" style="background:#c9a84c"></span> Gold
+          <span class="check">✓</span>
+        </label>
+        <label class="color-chip">
+          <input type="checkbox" name="color_amber" value="1">
+          <span class="dot" style="background:#c47c1a"></span> Amber
+          <span class="check">✓</span>
+        </label>
+        <label class="color-chip">
+          <input type="checkbox" name="color_brown" value="1">
+          <span class="dot" style="background:#7a4e2a"></span> Brown
+          <span class="check">✓</span>
+        </label>
+        <label class="color-chip">
+          <input type="checkbox" name="color_purple" value="1">
+          <span class="dot" style="background:#6a2e8b"></span> Purple
+          <span class="check">✓</span>
+        </label>
+        <label class="color-chip">
+          <input type="checkbox" name="color_ruby" value="1">
+          <span class="dot" style="background:#8b1a2e"></span> Ruby
+          <span class="check">✓</span>
+        </label>
+        <label class="color-chip">
+          <input type="checkbox" name="color_garnet" value="1">
+          <span class="dot" style="background:#5a0e20"></span> Garnet
+          <span class="check">✓</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 3. 후각 -->
+    <div class="card">
+      <h2>③ 후각 (Nose)</h2>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <span>향 강도 (Nose Intensity)</span>
+          <span id="val-nose_intensity">0.5</span>
+        </div>
+        <input type="range" id="nose_intensity" min="0" max="1" step="0.01" value="0.5"
+               oninput="updateVal('nose_intensity',this.value)">
+        <div class="range-ends"><span>약함</span><span>강함</span></div>
+      </div>
+
+      <div style="font-size:0.8rem;color:var(--muted);margin:12px 0 6px;">과일 향</div>
+      <div class="chip-grid">
+        <label class="chip"><input type="checkbox" name="fruit_green">🌿 Green</label>
+        <label class="chip"><input type="checkbox" name="fruit_citrus">🍋 Citrus</label>
+        <label class="chip"><input type="checkbox" name="fruit_stone">🍑 Stone</label>
+        <label class="chip"><input type="checkbox" name="fruit_tropical">🍍 Tropical</label>
+        <label class="chip"><input type="checkbox" name="fruit_red">🍓 Red Fruit</label>
+        <label class="chip"><input type="checkbox" name="fruit_black">🫐 Black Fruit</label>
+      </div>
+
+      <div style="font-size:0.8rem;color:var(--muted);margin:12px 0 6px;">세컨더리 / 터셔리</div>
+      <div class="chip-grid">
+        <label class="chip"><input type="checkbox" name="secondary_oak">🪵 Oak</label>
+        <label class="chip"><input type="checkbox" name="secondary_creamy">🧈 Creamy</label>
+        <label class="chip"><input type="checkbox" name="tertiary_present">🍂 Tertiary</label>
+      </div>
+
+      <div class="slider-row" style="margin-top:14px">
+        <div class="slider-label">
+          <span>발전도 (Development)</span>
+          <span id="val-development">0.3</span>
+        </div>
+        <input type="range" id="development" min="0" max="1" step="0.01" value="0.3"
+               oninput="updateVal('development',this.value)">
+        <div class="range-ends"><span>영(Young)</span><span>숙성(Aged)</span></div>
+      </div>
+    </div>
+
+    <!-- 4. 미각 -->
+    <div class="card">
+      <h2>④ 미각 (Palate)</h2>
+
+      <div class="slider-row">
+        <div class="slider-label"><span>산도 (Acidity)</span><span id="val-acidity">0.5</span></div>
+        <input type="range" id="acidity" min="0" max="1" step="0.01" value="0.5"
+               oninput="updateVal('acidity',this.value)">
+        <div class="range-ends"><span>낮음</span><span>높음</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label"><span>바디 (Body)</span><span id="val-body">0.5</span></div>
+        <input type="range" id="body" min="0" max="1" step="0.01" value="0.5"
+               oninput="updateVal('body',this.value)">
+        <div class="range-ends"><span>Light</span><span>Full</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label"><span>피니쉬 (Finish)</span><span id="val-finish">0.5</span></div>
+        <input type="range" id="finish" min="0" max="1" step="0.01" value="0.5"
+               oninput="updateVal('finish',this.value)">
+        <div class="range-ends"><span>짧음</span><span>길음</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label"><span>타닌 (Tannin)</span><span id="val-tannin">0.3</span></div>
+        <input type="range" id="tannin" min="0" max="1" step="0.01" value="0.3"
+               oninput="updateVal('tannin',this.value)">
+        <div class="range-ends"><span>없음</span><span>풍부</span></div>
+      </div>
+    </div>
+
+    <!-- 5. 결론 -->
+    <div class="card">
+      <h2>⑤ 종합 평가 (Conclusion)</h2>
+
+      <div class="slider-row">
+        <div class="slider-label"><span>복잡도 (Complexity)</span><span id="val-score_complexity">0.5</span></div>
+        <input type="range" id="score_complexity" min="0" max="1" step="0.01" value="0.5"
+               oninput="updateVal('score_complexity',this.value)">
+        <div class="range-ends"><span>단순</span><span>복잡</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label"><span>강도 (Intensity)</span><span id="val-score_intensity">0.5</span></div>
+        <input type="range" id="score_intensity" min="0" max="1" step="0.01" value="0.5"
+               oninput="updateVal('score_intensity',this.value)">
+        <div class="range-ends"><span>약함</span><span>강함</span></div>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="runPredict()">✨ 파티클 파라미터 추론</button>
+
+  </div><!-- /form-col -->
+
+  <!-- ── 오른쪽: 결과 패널 ── -->
+  <div class="result-panel">
+    <div class="result-card">
+      <h2>파티클 이펙트 결과</h2>
+
+      <div id="result-placeholder" class="placeholder">
+        <span class="icon">🎇</span>
+        <span>테이스팅 정보를 입력하고<br>추론 버튼을 누르세요</span>
+      </div>
+
+      <div id="result-content" style="display:none">
+        <canvas id="particleCanvas" width="600" height="400"></canvas>
+
+        <div class="ptype-badge">
+          <div class="ptype-name" id="res-ptype-name">—</div>
+          <div class="ptype-desc" id="res-ptype-desc">—</div>
+        </div>
+
+        <div class="color-swatch" id="res-color-swatch"></div>
+
+        <div class="param-grid">
+          <div class="param-item">
+            <div class="param-label">Size</div>
+            <div class="param-value" id="res-size">—</div>
+          </div>
+          <div class="param-item">
+            <div class="param-label">Count</div>
+            <div class="param-value" id="res-count">—</div>
+          </div>
+          <div class="param-item">
+            <div class="param-label">Speed</div>
+            <div class="param-value" id="res-speed">—</div>
+          </div>
+          <div class="param-item">
+            <div class="param-label">Gravity</div>
+            <div class="param-value" id="res-gravity">—</div>
+          </div>
+        </div>
+
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;">JSON Output (→ Unity / XR)</div>
+        <div class="json-output" id="res-json">{ }</div>
+      </div>
+
+      <div class="spinner" id="spinner"></div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
+
+<script>
+// ── 슬라이더 값 업데이트 ──────────────────────────────────────
+function updateVal(id, val) {
+  document.getElementById('val-' + id).textContent = parseFloat(val).toFixed(2);
+}
+
+// ── 폼 데이터 수집 ────────────────────────────────────────────
+function collectFormData() {
+  const data = {};
+
+  // 와인 타입
+  const wineType = document.querySelector('input[name="wine_type"]:checked').value;
+  data['is_red'] = wineType === 'red' ? 1.0 : 0.0;
+
+  // 슬라이더
+  const sliders = ['color_depth','nose_intensity','development',
+                   'acidity','body','finish','tannin',
+                   'score_complexity','score_intensity'];
+  sliders.forEach(id => {
+    data[id] = parseFloat(document.getElementById(id).value);
+  });
+
+  // 색상 체크박스
+  const colorNames = ['color_straw','color_lemon','color_gold','color_amber',
+                      'color_brown','color_purple','color_ruby','color_garnet'];
+  colorNames.forEach(name => {
+    const el = document.querySelector(`input[name="${name}"]`);
+    data[name] = el && el.checked ? 1.0 : 0.0;
+  });
+
+  // 과일/세컨더리 체크박스
+  const checkNames = ['fruit_green','fruit_citrus','fruit_stone','fruit_tropical',
+                      'fruit_red','fruit_black',
+                      'secondary_oak','secondary_creamy','tertiary_present'];
+  checkNames.forEach(name => {
+    const el = document.querySelector(`input[name="${name}"]`);
+    data[name] = el && el.checked ? 1.0 : 0.0;
+  });
+
+  return data;
+}
+
+// ── 추론 실행 ─────────────────────────────────────────────────
+async function runPredict() {
+  const btn = document.querySelector('.submit-btn');
+  const spinner = document.getElementById('spinner');
+  btn.disabled = true;
+  spinner.style.display = 'block';
+
+  const payload = collectFormData();
+
+  try {
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      alert('오류: ' + data.error);
+      return;
+    }
+
+    showResult(data);
+  } catch (e) {
+    alert('서버 연결 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+// ── 결과 표시 ─────────────────────────────────────────────────
+function showResult(d) {
+  document.getElementById('result-placeholder').style.display = 'none';
+  document.getElementById('result-content').style.display = 'block';
+
+  // 파티클 타입
+  document.getElementById('res-ptype-name').textContent = d.particle_type_name.toUpperCase();
+  document.getElementById('res-ptype-desc').textContent = d.particle_type_desc || '';
+
+  // 색상 스와치
+  const r = Math.round(d.color_r * 255);
+  const g = Math.round(d.color_g * 255);
+  const b = Math.round(d.color_b * 255);
+  document.getElementById('res-color-swatch').style.background =
+    `linear-gradient(135deg, rgb(${r},${g},${b}), rgba(${r},${g},${b},0.4))`;
+
+  // 수치 파라미터
+  document.getElementById('res-size').textContent    = d.particle_size.toFixed(3);
+  document.getElementById('res-count').textContent   = d.particle_count;
+  document.getElementById('res-speed').textContent   = d.particle_speed.toFixed(3);
+  document.getElementById('res-gravity').textContent = (d.gravity >= 0 ? '+' : '') + d.gravity.toFixed(3);
+
+  // JSON 출력
+  const jsonObj = {
+    particle_type:  d.particle_type,
+    particle_type_name: d.particle_type_name,
+    particle_size:  d.particle_size,
+    particle_count: d.particle_count,
+    particle_speed: d.particle_speed,
+    gravity:        d.gravity,
+    color_r:        d.color_r,
+    color_g:        d.color_g,
+    color_b:        d.color_b,
+  };
+  document.getElementById('res-json').textContent = JSON.stringify(jsonObj, null, 2);
+
+  // 파티클 캔버스 애니메이션
+  drawParticles(d);
+}
+
+// ── Canvas 파티클 미리보기 ────────────────────────────────────
+let animId = null;
+const particles = [];
+
+function drawParticles(d) {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+
+  if (animId) cancelAnimationFrame(animId);
+  particles.length = 0;
+
+  const count = Math.min(d.particle_count, 100);
+  const r = d.color_r, g = d.color_g, b = d.color_b;
+  const size  = d.particle_size;
+  const speed = d.particle_speed;
+  const grav  = d.gravity;          // -1(위) ~ +1(아래)
+  const ptype = d.particle_type;    // 0~4
+
+  // 파티클 생성
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const spd   = (0.3 + Math.random() * 0.7) * speed * 1.5;
+    particles.push({
+      x:  Math.random() * W,
+      y:  Math.random() * H,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      size: (size * 1.8 + Math.random() * size),
+      alpha: 0.4 + Math.random() * 0.6,
+      life:  0.005 + Math.random() * 0.008,
+    });
+  }
+
+  function frame() {
+    ctx.fillStyle = 'rgba(10,10,18,0.18)';
+    ctx.fillRect(0, 0, W, H);
+
+    for (const p of particles) {
+      p.x  += p.vx;
+      p.y  += p.vy + grav * 0.4;  // gravity
+      p.alpha -= p.life;
+
+      if (p.alpha <= 0 || p.x < -20 || p.x > W+20 || p.y < -20 || p.y > H+20) {
+        // 재생성
+        p.x     = Math.random() * W;
+        p.y     = H * 0.5 + (Math.random() - 0.5) * H;
+        const angle = Math.random() * Math.PI * 2;
+        const spd   = (0.3 + Math.random() * 0.7) * speed * 1.5;
+        p.vx    = Math.cos(angle) * spd;
+        p.vy    = Math.sin(angle) * spd;
+        p.alpha = 0.4 + Math.random() * 0.6;
+        p.life  = 0.005 + Math.random() * 0.008;
+        p.size  = size * 1.8 + Math.random() * size;
+      }
+
+      const a = Math.max(0, p.alpha);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.translate(p.x, p.y);
+
+      if (ptype === 0) {
+        // bubble: 원
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255,255,255,0.3)`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+      } else if (ptype === 1) {
+        // teardrop: 물방울
+        ctx.beginPath();
+        ctx.moveTo(0, -p.size * 0.7);
+        ctx.bezierCurveTo(p.size*0.5, -p.size*0.3, p.size*0.5, p.size*0.4, 0, p.size*0.7);
+        ctx.bezierCurveTo(-p.size*0.5, p.size*0.4, -p.size*0.5, -p.size*0.3, 0, -p.size*0.7);
+        ctx.fillStyle = `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;
+        ctx.fill();
+
+      } else if (ptype === 2) {
+        // smoke: 흐린 원
+        const grad = ctx.createRadialGradient(0,0,0, 0,0,p.size);
+        grad.addColorStop(0, `rgba(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)},0.6)`);
+        grad.addColorStop(1, `rgba(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)},0)`);
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+      } else if (ptype === 3) {
+        // shard: 다이아몬드
+        const s = p.size * 0.7;
+        ctx.beginPath();
+        ctx.moveTo(0, -s); ctx.lineTo(s*0.6, 0);
+        ctx.lineTo(0, s);  ctx.lineTo(-s*0.6, 0);
+        ctx.closePath();
+        ctx.fillStyle = `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;
+        ctx.fill();
+
+      } else {
+        // crystal: 별
+        const s = p.size * 0.6;
+        ctx.beginPath();
+        for (let j = 0; j < 6; j++) {
+          const a1 = (j / 6) * Math.PI * 2 - Math.PI / 2;
+          const a2 = ((j + 0.5) / 6) * Math.PI * 2 - Math.PI / 2;
+          ctx.lineTo(Math.cos(a1) * s, Math.sin(a1) * s);
+          ctx.lineTo(Math.cos(a2) * s * 0.4, Math.sin(a2) * s * 0.4);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    animId = requestAnimationFrame(frame);
+  }
+
+  frame();
+}
+</script>
+</body>
+</html>
